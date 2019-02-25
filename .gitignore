@@ -27,6 +27,7 @@ ExportedObj/
 sysinfo.txt
 
 *.csproj
+*.blend
 /Assets/Generated.meta
 Assets/Generated
 Gen
