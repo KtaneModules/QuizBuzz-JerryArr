@@ -69,11 +69,13 @@ public class quizBuzz : MonoBehaviour
         "1, 2, 4, 6, 8, 9",
     };
 
-    int[] fizzPositions = new int[6];
-    int[] buzzPositions = new int[4];
+    int[] fizzPositions = new int[6] { 20, 20, 20, 20, 20, 20 };
+    int[] buzzPositions = new int[4] { 20, 20, 20, 20 };
 
     int fizzNumber = 0;
     int buzzNumber = 0;
+    int fizzRound = 0;
+    int buzzRound = 0;
     int curStage = 0;
 
     bool pressedAllowed = false;
@@ -116,12 +118,15 @@ public class quizBuzz : MonoBehaviour
                 var itsGood = false;
                 var secondPart = "";
                 var fizzPiece = 0;
+                var goodFizz = -1;
+                var goodBuzz = -1;
                 reasonWhy = "Strike on stage " + curStage + ": ";
                 while (curPiece < pieces.Length && !itsGood)
                 {
                     if (pieces[curPiece] == currentInput.Substring(0, pieces[curPiece].Length))
                     {
                         itsGood = true;
+                        goodFizz = curPiece;
                         secondPart = currentInput.Substring(pieces[curPiece].Length, currentInput.Length - pieces[curPiece].Length);
                     }
                     else
@@ -133,6 +138,7 @@ public class quizBuzz : MonoBehaviour
                 if (!itsGood)
                 {
                     reasonWhy = reasonWhy + "Fizzbuzz input (" + currentInput + ") did not start with a valid answer for the category " + theModules[fizzNumber] + ". ";
+
                 }
                 if (itsGood)
                 {
@@ -146,7 +152,8 @@ public class quizBuzz : MonoBehaviour
                             {
                                 reasonWhy = reasonWhy + (1 + fizzPositions[j]) + ", ";
                             }
-                            reasonWhy = reasonWhy + "and " + (1 + fizzPositions[4]) + ", and you tried position " + (1 + curPiece) + " again. ";
+                            reasonWhy = reasonWhy + "and " + (1 + fizzPositions[3]) + ", and you tried position " + (1 + curPiece) + " again. ";
+                            i = 4;
                         }
                     }
                     // Now on to the buzz part of the fizzbuzz
@@ -159,14 +166,16 @@ public class quizBuzz : MonoBehaviour
                         if (pieces[curPiece] == secondPart)
                         {
                             itsGood = true;
+                            goodBuzz = curPiece;
                         }
                         else
                         {
                             curPiece++;
                         }
-                        if (!itsGood)
+                        if (!itsGood && secondPart == "")
                         {
                             reasonWhy = reasonWhy + "Fizzbuzz input (" + currentInput + ") did not end with a valid answer for the category " + theModules[buzzNumber] + ". ";
+                            curPiece = 999;
                         }
                     }
                     for (int i = 0; i < 2; i++)
@@ -176,13 +185,21 @@ public class quizBuzz : MonoBehaviour
                             itsGood = false;
                             reasonWhy = reasonWhy + "Fizzbuzz input (" + currentInput + ") ended with an answer in a previously used list position for Buzz. You used positions ";
                             reasonWhy = reasonWhy + (buzzPositions[0] + 1) + " and " + (1 + buzzPositions[1]) + ", and you tried position " + (1 + curPiece) + " again. ";
+                            i = 2;
                         }
+                        
                     }
                 }
 
 
                 if (itsGood)
                 {
+
+                    fizzPositions[fizzRound] = goodFizz;
+                    fizzRound++;
+
+                    buzzPositions[buzzRound] = goodBuzz;
+                    buzzRound++;
                     GetComponent<KMAudio>().PlaySoundAtTransform("ding", transform);
 Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage and you entered {2}, which was in position {3} of the list for {4} and position {5} for the list for {6}.", 
     _moduleId, curStage, currentInput, (fizzPiece + 1), theModules[fizzNumber], (curPiece + 1), theModules[buzzNumber]);
@@ -199,12 +216,14 @@ Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage 
                 var pieces = theAnswers[buzzNumber].ToLowerInvariant().Split(new[] { ", " }, StringSplitOptions.RemoveEmptyEntries);
                 var curPiece = 0;
                 var itsGood = false;
+                var goodPiece = -1;
                 reasonWhy = "Strike on stage " + curStage + ": ";
                 while (curPiece < pieces.Length && !itsGood)
                 {
                     if (pieces[curPiece] == currentInput)
                     {
                         itsGood = true;
+                        goodPiece = curPiece;
                     }
                     else
                     {
@@ -214,6 +233,7 @@ Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage 
                 if (!itsGood)
                 {
                     reasonWhy = reasonWhy + "Buzz input (" + currentInput + ") was not a valid answer for the category " + theModules[fizzNumber] + ". ";
+                    curPiece = 999;
                 }
                 for (int i = 0; i < (curStage / 5) - 1; i++)
                 {
@@ -226,6 +246,7 @@ Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage 
                             reasonWhy = reasonWhy + (buzzPositions[j] + 1) + " and ";
                         }
                         reasonWhy = reasonWhy + "you tried position " + (1 + curPiece) + " again. ";
+                        i = (curStage / 5);
                     }
                 }
 
@@ -247,6 +268,8 @@ Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage 
                 }
                 else
                 {
+                    buzzPositions[buzzRound] = goodPiece;
+                    buzzRound++;
                     GetComponent<KMAudio>().PlaySoundAtTransform("ding", transform);
                     Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a Buzz stage and you entered {2}, which was in position {3} of the list for {4}.", _moduleId, curStage,
                         currentInput, (curPiece + 1), theModules[buzzNumber]);
@@ -262,12 +285,14 @@ Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage 
                 var pieces = theAnswers[fizzNumber].ToLowerInvariant().Split(new[] { ", " }, StringSplitOptions.RemoveEmptyEntries);
                 var curPiece = 0;
                 var itsGood = false;
+                var goodPiece = -1;
                 reasonWhy = "Strike on stage " + curStage + ": ";
                 while (curPiece < pieces.Length && !itsGood)
                 {
                     if (pieces[curPiece] == currentInput)
                     {
                         itsGood = true;
+                        goodPiece = curPiece;
                     }
                     else
                     {
@@ -277,6 +302,7 @@ Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage 
                 if (!itsGood)
                 {
                     reasonWhy = reasonWhy + "Fizz input (" + currentInput + ") was not a valid answer for the category " + theModules[fizzNumber] + ". ";
+                    curPiece = 999;
                 }
                 for (int i = 0; i < (curStage / 3) - 1; i++)
                 {
@@ -289,6 +315,7 @@ Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage 
                             reasonWhy = reasonWhy + (fizzPositions[j] + 1) + " and ";
                         }
                         reasonWhy = reasonWhy + "you tried position " + (1 + curPiece) + " again. ";
+                        i = (curStage / 3);
                     }
                 }
                 if (!itsGood)
@@ -298,6 +325,8 @@ Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage 
                 }
                 else
                 {
+                    fizzPositions[fizzRound] = goodPiece;
+                    fizzRound++;
                     GetComponent<KMAudio>().PlaySoundAtTransform("ding", transform);
                     Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a Fizz stage and you entered {2}, which was in position {3} of the list for {4}.", _moduleId, curStage,
                         currentInput, (curPiece + 1), theModules[fizzNumber]);
@@ -494,6 +523,16 @@ Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage 
     {
         if (!isSolved)
         {
+            fizzRound = 0;
+            buzzRound = 0;
+            for (int i = 0; i < 4; i++)
+            {
+                fizzPositions[i] = 20;
+                buzzPositions[i] = 20;
+            }
+            fizzPositions[4] = 20;
+            fizzPositions[5] = 20;
+
             Debug.LogFormat("[Quiz Buzz #{0}] {1}Strike given!", _moduleId, reasonWhy);
             curStage = 0;
             doStageChange();
@@ -506,7 +545,17 @@ Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage 
 
     void doStageChange()
     {
-
+        var stringX = "Used are F ";
+        for (int i = 0; i < 6; i++)
+        {
+            stringX = stringX + fizzPositions[i] + " ";
+        }
+        stringX = stringX + "B ";
+        for (int i = 0; i < 4; i++)
+        {
+            stringX = stringX + buzzPositions[i] + " ";
+        }
+        //Debug.Log(stringX);
         curStage++;
         if (curStage > 1)
         {
@@ -517,6 +566,7 @@ Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage 
         buzzNumber = (UnityEngine.Random.Range(1, 19) + fizzNumber) % 19;
         fizzDisplay.GetComponentInChildren<TextMesh>().text = theModules[fizzNumber];
         buzzDisplay.GetComponentInChildren<TextMesh>().text = theModules[buzzNumber];
+        
     }
 
 
