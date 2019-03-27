@@ -372,22 +372,32 @@ Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage 
     }
 
 #pragma warning disable 414
-    private readonly string TwitchHelpMessage = @"Type a number with !{0} (type/t) 12345678. Delete a digit with !{0} (delete/del/d). Clear with !{0} (clear/c). Enter with (enter/e).";
+    private readonly string TwitchHelpMessage = @"Type a number with !{0} (type/t) 12345678. Delete a digit with !{0} (delete/del/d). Clear with !{0} (clear/c). Enter with (enter/e). Type then enter with (typeenter/te) 12345678";
     private readonly bool TwitchShouldCancelCommand = false;
 #pragma warning restore 414
 
     private IEnumerator ProcessTwitchCommand(string command)
     {
+        if (stageTiming < 45)
+        {
+            stageTiming = 45;
+        }
         var pieces = command.ToLowerInvariant().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
         string theError = "";
         yield return null;
         if (pieces.Length == 1)
         {
-            if (pieces[0] == "type" || pieces[0] == "t")
+            if (pieces[0] == "type" || pieces[0] == "t")                
             {
                 theError = "sendtochaterror Missing argument! You must type a 1 to 8 digit number after 'type'.";
                 yield return theError;
             }
+            else if (pieces[0] == "typeenter" || pieces[0] == "te")
+            {
+                theError = "sendtochaterror Missing argument! You must type a 1 to 8 digit number after 'typeenter'.";
+                yield return theError;
+            }
+
             else if (pieces[0] == "delete" || pieces[0] == "d" || pieces[0] == "del")
             {
                 yield return new WaitForSeconds(.1f);
@@ -402,13 +412,22 @@ Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage 
             }
             else if (pieces[0] == "enter" || pieces[0] == "e" || pieces[0] == "s" || pieces[0] == "submit")
             {
-                yield return new WaitForSeconds(.1f);
-                yield return null;
-                enterButton.OnInteract();
+                if (currentInput == "" || currentInput == null)
+                {
+                    theError = "sendtochaterror Nothing to enter, so enter not pressed!";
+                    yield return theError;
+                }
+                else
+                {
+                    yield return new WaitForSeconds(.1f);
+                    yield return null;
+                    enterButton.OnInteract();
+                }
+
             }
             else
             {
-                theError = "sendtochaterror Invalid command! " + pieces[0] + " is not a valid command, please use type, delete, clear, or enter.";
+                theError = "sendtochaterror Invalid command! " + pieces[0] + " is not a valid command, please use type, delete, clear, enter or typeenter.";
                 yield return theError;
             }
         }
@@ -447,7 +466,43 @@ Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage 
 
                 }
             }
-            else if (pieces[0] == "delete" || pieces[0] == "d" || pieces[0] == "del")
+            else if (pieces[0] == "typeenter" || pieces[0] == "te")
+            {
+                if (pieces[1].Length > 8)
+                {
+
+                    theError = "sendtochaterror Invalid length! You don't need any more than eight digits.";
+                    yield return theError;
+                }
+                for (int k = 0; k < pieces[1].Length; k++)
+                {
+                    Debug.Log(pieces[1].Substring(k, 1));
+                    if (pieces[1].Substring(k, 1) != "0" && pieces[1].Substring(k, 1) != "1" && pieces[1].Substring(k, 1) != "2" && pieces[1].Substring(k, 1) != "3" &&
+                        pieces[1].Substring(k, 1) != "4" && pieces[1].Substring(k, 1) != "5" && pieces[1].Substring(k, 1) != "6" && pieces[1].Substring(k, 1) != "7" &&
+                        pieces[1].Substring(k, 1) != "8" && pieces[1].Substring(k, 1) != "9")
+                    {
+
+                        theError = "sendtochaterror Invalid character! " + pieces[1].Substring(k, 1) + " is not a digit.";
+                        yield return theError;
+                    }
+                }
+                if (theError == "")
+                {
+                    for (int l = 0; l < pieces[1].Length; l++)
+                    {
+                        var curDigit = Int16.Parse(pieces[1].Substring(l, 1));
+                        yield return new WaitForSeconds(.1f);
+                        yield return null;
+                        buttons[curDigit].OnInteract();
+                    }
+
+                }
+                yield return new WaitForSeconds(.1f);
+                yield return null;
+                enterButton.OnInteract();
+                enterButton.OnInteractEnded();
+            }
+                        else if (pieces[0] == "delete" || pieces[0] == "d" || pieces[0] == "del")
             {
                 yield return new WaitForSeconds(.1f);
                 yield return null;
@@ -465,13 +520,13 @@ Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage 
                 yield return null;
                 enterButton.OnInteract();
                 enterButton.OnInteractEnded();
-
             }
             else
             {
                 theError = "sendtochaterror Invalid command! " + pieces[0] + " is not a valid command, please use type, delete, clear, or enter.";
                 yield return theError;
             }
+
         }
         else
         {

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: quizBuzz
   title: Quiz Buzz
-  description: 'Quiz Buzz v1.01
+  description: 'Quiz Buzz v1.02
 
 
     How do you make FizzBuzz even more exciting? Add in Tom Scott and trivia. And
@@ -21,6 +21,6 @@ MonoBehaviour:
 
 
     Manual to be available here: https://ktane.timwi.de/HTML/Quiz%20Buzz.html'
-  version: 1.01
+  version: 1.02
   outputFolder: build
   previewImage: {fileID: 2800000, guid: 18abf335278492c4fbaf50d5b06129f9, type: 3}
