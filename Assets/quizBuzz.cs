@@ -77,6 +77,7 @@ public class quizBuzz : MonoBehaviour
     int fizzRound = 0;
     int buzzRound = 0;
     int curStage = 0;
+    int startNumber = -1;
 
     bool pressedAllowed = false;
     bool isSolved = false;
@@ -101,17 +102,27 @@ public class quizBuzz : MonoBehaviour
 
     void Init()
     {
+        determineStartNumber();
         
         doStageChange();
         delegationZone();
         settings = JsonConvert.DeserializeObject<Settings>(ModSettings.Settings);
     }
 
+    void determineStartNumber()
+    {
+        startNumber = 15 * UnityEngine.Random.Range(1, 6); //generates a random number from 1-5 then multiplies it by 15
+        startNumber = startNumber - UnityEngine.Random.Range(1, 10); //subtracts a number from 1-9 from the start number, guaranteeing a fizzbuzz number
+        curStage = startNumber - 1; //curStage is incremented by 1 in the next function
+        timerDisplay.GetComponentInChildren<TextMesh>().text = "-" + startNumber + "-";
+        Debug.LogFormat("[Quiz Buzz #{0}] The starting stage for this run is {1}.", _moduleId, startNumber);
+    }
+
     void doSubmit()
     {
         if (pressedAllowed)
         {
-            if (curStage == 15)
+            if (curStage % 15 == 0) //fizzbuzz number
             {
                 var pieces = theAnswers[fizzNumber].ToLowerInvariant().Split(new[] { ", " }, StringSplitOptions.RemoveEmptyEntries);
                 var curPiece = 0;
@@ -140,6 +151,7 @@ public class quizBuzz : MonoBehaviour
                     reasonWhy = reasonWhy + "Fizzbuzz input (" + currentInput + ") did not start with a valid answer for the category " + theModules[fizzNumber] + ". ";
 
                 }
+
                 if (itsGood)
                 {
                     for (int i = 0; i < 4; i++)
@@ -194,16 +206,27 @@ public class quizBuzz : MonoBehaviour
 
                 if (itsGood)
                 {
+                    if (curStage == startNumber + 9)
+                    {
+                        timeLeft = -100f;
+                        timerDisplay.GetComponentInChildren<TextMesh>().text = "WIN";
+                        reasonWhy = "";
+                        Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage and you entered {2}, which was in position {3} of the list for {4} and position {5} for the list for {6}.",
+                            _moduleId, curStage, currentInput, (fizzPiece + 1), theModules[fizzNumber], (curPiece + 1), theModules[buzzNumber]);
+                        doSolve();
+                    }
+                    else
+                    {
+                        fizzPositions[fizzRound] = goodFizz;
+                        fizzRound++;
 
-                    fizzPositions[fizzRound] = goodFizz;
-                    fizzRound++;
-
-                    buzzPositions[buzzRound] = goodBuzz;
-                    buzzRound++;
-                    GetComponent<KMAudio>().PlaySoundAtTransform("ding", transform);
-Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage and you entered {2}, which was in position {3} of the list for {4} and position {5} for the list for {6}.", 
-    _moduleId, curStage, currentInput, (fizzPiece + 1), theModules[fizzNumber], (curPiece + 1), theModules[buzzNumber]);
-                    doStageChange();
+                        buzzPositions[buzzRound] = goodBuzz;
+                        buzzRound++;
+                        GetComponent<KMAudio>().PlaySoundAtTransform("ding", transform);
+                        Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage and you entered {2}, which was in position {3} of the list for {4} and position {5} for the list for {6}.",
+                            _moduleId, curStage, currentInput, (fizzPiece + 1), theModules[fizzNumber], (curPiece + 1), theModules[buzzNumber]);
+                        doStageChange();
+                    }
                 }
                 else
                 {
@@ -235,13 +258,13 @@ Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage 
                     reasonWhy = reasonWhy + "Buzz input (" + currentInput + ") was not a valid answer for the category " + theModules[fizzNumber] + ". ";
                     curPiece = 999;
                 }
-                for (int i = 0; i < (curStage / 5) - 1; i++)
+                for (int i = 0; i < ((curStage - startNumber) / 5) - 1; i++)
                 {
                     if (curPiece == buzzPositions[i])
                     {
                         itsGood = false;
                         reasonWhy = reasonWhy + "Buzz input (" + currentInput + ") was an answer in a previously used list position for Buzz. You used position(s) ";
-                        for (int j = 0; j < (curStage / 5) - 1; j++)
+                        for (int j = 0; j < ((curStage - startNumber) / 5) - 1; j++)
                         {
                             reasonWhy = reasonWhy + (buzzPositions[j] + 1) + " and ";
                         }
@@ -257,7 +280,7 @@ Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage 
                     timerDisplay.GetComponentInChildren<TextMesh>().text = "---";
                     doStrike();
                 }
-                else if (curStage == 20)
+                else if (curStage == startNumber + 9)
                 {
                     timeLeft = -100f;
                     timerDisplay.GetComponentInChildren<TextMesh>().text = "WIN";
@@ -304,13 +327,13 @@ Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage 
                     reasonWhy = reasonWhy + "Fizz input (" + currentInput + ") was not a valid answer for the category " + theModules[fizzNumber] + ". ";
                     curPiece = 999;
                 }
-                for (int i = 0; i < (curStage / 3) - 1; i++)
+                for (int i = 0; i < ((curStage - startNumber) / 3) - 1; i++)
                 {
                     if (curPiece == fizzPositions[i])
                     {
                         itsGood = false;
                         reasonWhy = reasonWhy + "Fizz input (" + currentInput + ") was an answer in a previously used list position for Fizz. You used position(s) ";
-                        for (int j = 0; j < (curStage / 3) - 1; j++)
+                        for (int j = 0; j < ((curStage - startNumber) / 3) - 1; j++)
                         {
                             reasonWhy = reasonWhy + (fizzPositions[j] + 1) + " and ";
                         }
@@ -322,6 +345,15 @@ Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage 
                 {
                     timerDisplay.GetComponentInChildren<TextMesh>().text = "---";
                     doStrike();
+                }
+                else if (curStage == startNumber + 9)
+                {
+                    timeLeft = -100f;
+                    timerDisplay.GetComponentInChildren<TextMesh>().text = "WIN";
+                    reasonWhy = "";
+                    Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a Fizz stage and you entered {2}, which was in position {3} of the list for {4}.", _moduleId, curStage,
+                        currentInput, (curPiece + 1), theModules[fizzNumber]);
+                    doSolve();
                 }
                 else
                 {
@@ -341,12 +373,24 @@ Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage 
                 if (currentInput == "" + curStage)
                 {
                     //good
-                    GetComponent<KMAudio>().PlaySoundAtTransform("ding", transform);
-                    //Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is a correct Fizz, entered {2}, which was in position {3} if the list for {4}.", _moduleId, curStage);
 
-                    //Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a Number stage and you entered {1}.", _moduleId, curStage);
-                    doStageChange();
+                    Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a Number stage and you entered {1}.", _moduleId, curStage);
+                    //Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is a correct Fizz, entered {2}, which was in position {3} if the list for {4}.", _moduleId, curStage);
+                    if (curStage == startNumber + 9)
+                    {
+                        timeLeft = -100f;
+                        timerDisplay.GetComponentInChildren<TextMesh>().text = "WIN";
+                        reasonWhy = "";
+                        doSolve();
+                    }
+                    else
+                    {
+                        GetComponent<KMAudio>().PlaySoundAtTransform("ding", transform);
+                        doStageChange();
+                    }
                     //beep sound
+
+
                 }
                 else
                 {
@@ -563,7 +607,7 @@ Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage 
 
             timerDisplay.GetComponentInChildren<TextMesh>().text = timeString;
         }
-        else if (curStage == 1)
+        else if (curStage == startNumber)
         {
             //keep timer at "---"
         }
@@ -589,7 +633,7 @@ Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage 
             fizzPositions[5] = 20;
 
             Debug.LogFormat("[Quiz Buzz #{0}] {1}Strike given!", _moduleId, reasonWhy);
-            curStage = 0;
+            determineStartNumber();
             doStageChange();
             timeLeft = -100f;
             GetComponent<KMAudio>().PlaySoundAtTransform("buzz", transform);
@@ -612,10 +656,11 @@ Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage 
         }
         //Debug.Log(stringX);
         curStage++;
-        if (curStage > 1)
+        if (curStage > startNumber)
         {
             timeLeft = stageTiming;
         }
+        //Debug.Log("CurStage is " + curStage + " and StartStage is " + startNumber + ".");
         doClear();
         fizzNumber = UnityEngine.Random.Range(0, 19);
         buzzNumber = (UnityEngine.Random.Range(1, 19) + fizzNumber) % 19;
