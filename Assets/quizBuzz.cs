@@ -113,7 +113,7 @@ public class quizBuzz : MonoBehaviour
     {
         startNumber = 15 * UnityEngine.Random.Range(1, 6); //generates a random number from 1-5 then multiplies it by 15
         startNumber = startNumber - UnityEngine.Random.Range(1, 10); //subtracts a number from 1-9 from the start number, guaranteeing a fizzbuzz number
-        curStage = startNumber - 1; //curStage is incremented by 1 in the next function
+        curStage = startNumber - 1; //curStage is incremented by 1 in the stage change function
         timerDisplay.GetComponentInChildren<TextMesh>().text = "-" + startNumber + "-";
         Debug.LogFormat("[Quiz Buzz #{0}] The starting stage for this run is {1}.", _moduleId, startNumber);
     }
@@ -134,16 +134,21 @@ public class quizBuzz : MonoBehaviour
                 reasonWhy = "Strike on stage " + curStage + ": ";
                 while (curPiece < pieces.Length && !itsGood)
                 {
-                    if (pieces[curPiece] == currentInput.Substring(0, pieces[curPiece].Length))
-                    {
-                        itsGood = true;
-                        goodFizz = curPiece;
-                        secondPart = currentInput.Substring(pieces[curPiece].Length, currentInput.Length - pieces[curPiece].Length);
-                    }
-                    else
-                    {
-                        curPiece++;
-                    }
+					if (pieces[curPiece].Length > currentInput.Length) 
+						//since potential answers are checked in increasing order, if an answer has more digits than the total string that was input, we can safely skip the rest
+					{
+						curPiece = pieces.Length;
+					}
+					else if (pieces[curPiece] == currentInput.Substring(0, pieces[curPiece].Length))
+					{
+						itsGood = true;
+						goodFizz = curPiece;
+						secondPart = currentInput.Substring(pieces[curPiece].Length, currentInput.Length - pieces[curPiece].Length);
+					}
+					else
+					{
+						curPiece++;
+					}
 
                 }
                 if (!itsGood)
@@ -230,8 +235,8 @@ public class quizBuzz : MonoBehaviour
                 }
                 else
                 {
-                    timerDisplay.GetComponentInChildren<TextMesh>().text = "---";
                     doStrike();
+					timerDisplay.GetComponentInChildren<TextMesh>().text = "-" + startNumber + "-";
                 }
             }
             else if (curStage % 5 == 0)
@@ -243,6 +248,8 @@ public class quizBuzz : MonoBehaviour
                 reasonWhy = "Strike on stage " + curStage + ": ";
                 while (curPiece < pieces.Length && !itsGood)
                 {
+					
+					//Debug.LogFormat("Trying to match {0} against {1} as piece number {2}.", currentInput, pieces[curPiece], curPiece + 1);
                     if (pieces[curPiece] == currentInput)
                     {
                         itsGood = true;
@@ -250,12 +257,13 @@ public class quizBuzz : MonoBehaviour
                     }
                     else
                     {
+						
                         curPiece++;
                     }
                 }
                 if (!itsGood)
                 {
-                    reasonWhy = reasonWhy + "Buzz input (" + currentInput + ") was not a valid answer for the category " + theModules[fizzNumber] + ". ";
+                    reasonWhy = reasonWhy + "Buzz input (" + currentInput + ") was not a valid answer for the category " + theModules[buzzNumber] + ". ";
                     curPiece = 999;
                 }
                 for (int i = 0; i < ((curStage - startNumber) / 5) - 1; i++)
@@ -277,8 +285,8 @@ public class quizBuzz : MonoBehaviour
 
                 if (!itsGood)
                 {
-                    timerDisplay.GetComponentInChildren<TextMesh>().text = "---";
                     doStrike();
+					timerDisplay.GetComponentInChildren<TextMesh>().text = "-" + startNumber + "-";
                 }
                 else if (curStage == startNumber + 9)
                 {
@@ -343,8 +351,8 @@ public class quizBuzz : MonoBehaviour
                 }
                 if (!itsGood)
                 {
-                    timerDisplay.GetComponentInChildren<TextMesh>().text = "---";
                     doStrike();
+					timerDisplay.GetComponentInChildren<TextMesh>().text = "-" + startNumber + "-";
                 }
                 else if (curStage == startNumber + 9)
                 {
@@ -395,8 +403,8 @@ public class quizBuzz : MonoBehaviour
                 else
                 {
                     reasonWhy = reasonWhy + "Number input for stage " + curStage + " was expected, but you tried " + currentInput + " instead. ";
-                    timerDisplay.GetComponentInChildren<TextMesh>().text = "---";
                     doStrike();
+					timerDisplay.GetComponentInChildren<TextMesh>().text = "-" + startNumber + "-";
                     reasonWhy = "";
                 }
             }
@@ -404,6 +412,17 @@ public class quizBuzz : MonoBehaviour
         
 
     }
+
+	void TwitchHandleForcedSolve()
+	{
+		Debug.LogFormat("[Quiz Buzz #{0}] Twitch Plays demands an auto-solve, skipping all stages and making timer irrelevant.", _moduleId);
+        timeLeft = -100f;
+		timerDisplay.GetComponentInChildren<TextMesh>().text = "WIN";
+		reasonWhy = "";		
+		pressedAllowed = false;
+		isSolved = true;
+		Module.HandlePass();
+	}
     
     void doSolve()
     {
@@ -594,6 +613,7 @@ public class quizBuzz : MonoBehaviour
                 timeString = "---";
                 reasonWhy = "Time ran out. ";
                 doStrike();
+				timeString = "-" + startNumber + "-";
             }
             else if (timeLeft < 10)
             {
@@ -611,7 +631,7 @@ public class quizBuzz : MonoBehaviour
         {
             //keep timer at "---"
         }
-        else //time is up!!!!!
+        else //time is up!!!!! Or we solved the module which is fine because the strike only fires in the associated function if the module is not solved yet
         {
             doStrike();
         }
