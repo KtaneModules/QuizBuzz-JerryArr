@@ -41,7 +41,7 @@ public class quizBuzz : MonoBehaviour
 
     string[] theModules = new string[19]
     {
-        "Bases","The Code","Connection Check","Cryptography","Fast Math",
+        "Bases","Cheap Checkout","Connection Check","Cryptography","Fast Math",
         "FizzBuzz","Laundry","LED Encryption","Lightspeed","Marble Tumble",
         "Monsplode, Fight!","Morse Code","Question Mark","Spinning Buttons","Splitting the Loot",
         "Street Fighter","Tax Returns","Web Design","Wire Sequence",
@@ -49,7 +49,7 @@ public class quizBuzz : MonoBehaviour
     string[] theAnswers = new string[19]
     {
         "2, 3, 4, 5, 6, 7, 8, 10",
-        "8, 12, 20, 23, 30, 42, 69",
+        "250, 394, 397, 498, 797, 946",
         "1, 2, 3, 4, 5, 6, 7",
         "7, 8, 9, 10, 11, 16",
         "13, 15, 31, 36, 40, 41, 46, 47, 72, 73, 76, 93, 99",
@@ -163,13 +163,29 @@ public class quizBuzz : MonoBehaviour
                     {
                         if (curPiece == fizzPositions[i])
                         {
+							//Debug.Log("Whoops");
                             itsGood = false;
                             reasonWhy = reasonWhy + "Fizzbuzz input (" + currentInput + ") started with an answer in a previously used list position for Fizz. You used positions ";
                             for (int j = 0; j < 3; j++)
                             {
-                                reasonWhy = reasonWhy + (1 + fizzPositions[j]) + ", ";
+								if (fizzPositions[j] == 20)
+								{
+									j = 4;
+								}
+								else
+								{
+									reasonWhy = reasonWhy + (1 + fizzPositions[j]) + ", ";
+								}
+                                
                             }
-                            reasonWhy = reasonWhy + "and " + (1 + fizzPositions[3]) + ", and you tried position " + (1 + curPiece) + " again. ";
+								if (fizzPositions[3] == 20)
+								{
+									reasonWhy = reasonWhy + "and you tried position " + (1 + curPiece) + " again. ";
+								}
+								else
+								{
+									reasonWhy = reasonWhy + "and " + (1 + fizzPositions[3]) + ", and you tried position " + (1 + curPiece) + " again. ";
+								}
                             i = 4;
                         }
                     }
@@ -200,8 +216,16 @@ public class quizBuzz : MonoBehaviour
                         if (curPiece == buzzPositions[i])
                         {
                             itsGood = false;
-                            reasonWhy = reasonWhy + "Fizzbuzz input (" + currentInput + ") ended with an answer in a previously used list position for Buzz. You used positions ";
-                            reasonWhy = reasonWhy + (buzzPositions[0] + 1) + " and " + (1 + buzzPositions[1]) + ", and you tried position " + (1 + curPiece) + " again. ";
+                            reasonWhy = reasonWhy + "Fizzbuzz input (" + currentInput + ") ended with an answer in a previously used list position for Buzz. You used position";
+							if (buzzPositions[1] == 20)
+							{
+								reasonWhy = reasonWhy + " " + (buzzPositions[0] + 1) + " and you tried it again. ";
+							}
+							else
+							{
+								reasonWhy = reasonWhy + "s " + (buzzPositions[0] + 1) + " and " + (1 + buzzPositions[1]) + ", and you tried position " + (1 + curPiece) + " again. ";
+							}
+							
                             i = 2;
                         }
                         
@@ -209,7 +233,7 @@ public class quizBuzz : MonoBehaviour
                 }
 
 
-                if (itsGood)
+                if (itsGood && reasonWhy == "Strike on stage " + curStage + ": ")
                 {
                     if (curStage == startNumber + 9)
                     {
@@ -223,9 +247,11 @@ public class quizBuzz : MonoBehaviour
                     else
                     {
                         fizzPositions[fizzRound] = goodFizz;
+						//Debug.Log("fizzRound is" + fizzRound + " and goodFizz is " + goodFizz + ".");
                         fizzRound++;
 
                         buzzPositions[buzzRound] = goodBuzz;
+						//Debug.Log("buzzRound is" + buzzRound + " and goodBuzz is " + goodBuzz + ".");
                         buzzRound++;
                         GetComponent<KMAudio>().PlaySoundAtTransform("ding", transform);
                         Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage and you entered {2}, which was in position {3} of the list for {4} and position {5} for the list for {6}.",
@@ -432,6 +458,13 @@ public class quizBuzz : MonoBehaviour
         Debug.LogFormat("[Quiz Buzz #{0}] That's a solve! Module disarmed!", _moduleId, reasonWhy);
         GetComponent<KMAudio>().PlaySoundAtTransform("win", transform);
         GetComponent<KMBombModule>().HandlePass();
+		
+                if (Bomb.GetSolvableModuleNames().Where(x => "Souvenir".Contains(x)).Count() > 0)
+                {
+					fizzDisplay.GetComponentInChildren<TextMesh>().text = "- - -";
+					buzzDisplay.GetComponentInChildren<TextMesh>().text = "- - -";					
+					inputPlace.GetComponentInChildren<TextMesh>().text = "- - -";					
+				}
     }
 
 #pragma warning disable 414
