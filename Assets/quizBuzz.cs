@@ -256,6 +256,8 @@ public class quizBuzz : MonoBehaviour
                         GetComponent<KMAudio>().PlaySoundAtTransform("ding", transform);
                         Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a FizzBuzz stage and you entered {2}, which was in position {3} of the list for {4} and position {5} for the list for {6}.",
                             _moduleId, curStage, currentInput, (fizzPiece + 1), theModules[fizzNumber], (curPiece + 1), theModules[buzzNumber]);
+                        _usedIxs[fizzPiece] = true;
+                        _usedIxs[curPiece] = true;
                         doStageChange();
                     }
                 }
@@ -330,6 +332,7 @@ public class quizBuzz : MonoBehaviour
                     GetComponent<KMAudio>().PlaySoundAtTransform("ding", transform);
                     Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a Buzz stage and you entered {2}, which was in position {3} of the list for {4}.", _moduleId, curStage,
                         currentInput, (curPiece + 1), theModules[buzzNumber]);
+                    _usedIxs[curPiece] = true;
                     doStageChange();
                     
                 }
@@ -396,6 +399,7 @@ public class quizBuzz : MonoBehaviour
                     GetComponent<KMAudio>().PlaySoundAtTransform("ding", transform);
                     Debug.LogFormat("[Quiz Buzz #{0}] Stage {1} is correct, it was a Fizz stage and you entered {2}, which was in position {3} of the list for {4}.", _moduleId, curStage,
                         currentInput, (curPiece + 1), theModules[fizzNumber]);
+                    _usedIxs[curPiece] = true;
                     doStageChange();
                 }
             }
@@ -438,17 +442,6 @@ public class quizBuzz : MonoBehaviour
         
 
     }
-
-	void TwitchHandleForcedSolve()
-	{
-		Debug.LogFormat("[Quiz Buzz #{0}] Twitch Plays demands an auto-solve, skipping all stages and making timer irrelevant.", _moduleId);
-        timeLeft = -100f;
-		timerDisplay.GetComponentInChildren<TextMesh>().text = "WIN";
-		reasonWhy = "";		
-		pressedAllowed = false;
-		isSolved = true;
-		Module.HandlePass();
-	}
     
     void doSolve()
     {
@@ -675,6 +668,7 @@ public class quizBuzz : MonoBehaviour
     {
         if (!isSolved)
         {
+            _usedIxs = new bool[16];
             fizzRound = 0;
             buzzRound = 0;
             for (int i = 0; i < 4; i++)
@@ -803,4 +797,67 @@ public class quizBuzz : MonoBehaviour
 
     }
 
+    // Implemented by Quinn Wuest
+    private IEnumerator TwitchHandleForcedSolve()
+    {
+        while (!isSolved)
+        {
+            string sol = "";
+            int index = Array.IndexOf(_usedIxs, false);
+            var a = _nums[fizzNumber];
+            var b = _nums[buzzNumber];
+            if (curStage % 3 == 0)
+            {
+                sol += _nums[fizzNumber][index].ToString();
+                _usedIxs[index] = true;
+                while (_usedIxs[index])
+                    index = (index + 1) % _usedIxs.Length;
+            }
+            if (curStage % 5 == 0)
+                sol += _nums[buzzNumber][index].ToString();
+            if (sol == "")
+                sol = curStage.ToString();
+            if (!sol.StartsWith(currentInput))
+            {
+                clearButton.OnInteract();
+                yield return new WaitForSeconds(0.1f);
+            }
+            int start = 0;
+            for (int i = 0; i < currentInput.Length; i++)
+                if (currentInput[i] == sol[i])
+                    start++;
+            for (int i = start; i < sol.Length; i++)
+            {
+                buttons[sol[i] - '0'].OnInteract();
+                yield return new WaitForSeconds(0.1f);
+            }
+            enterButton.OnInteract();
+            yield return new WaitForSeconds(0.5f);
+        }
+        yield break;
+    }
+
+    private bool[] _usedIxs = new bool[16];
+    private static readonly int[][] _nums = new int[][]
+    {
+        new int[] {2, 3, 4, 5, 6, 7, 8, 10},
+        new int[] {250, 394, 397, 498, 797, 946},
+        new int[] {1, 2, 3, 4, 5, 6, 7},
+        new int[] {7, 8, 9, 10, 11, 16},
+        new int[] {13, 15, 31, 36, 40, 41, 46, 47, 72, 73, 76, 93, 99},
+        new int[] {1, 2, 3, 4, 5, 8},
+        new int[] {80, 105, 120, 140, 160, 200, 230, 300, 390},
+        new int[] {2, 3, 4, 5, 6, 7},
+        new int[] {1, 2, 3, 4, 5, 6, 8, 9},
+        new int[] {1, 2, 3, 4, 5, 6, 7, 8},
+        new int[] {1, 2, 3, 4, 5, 6},
+        new int[] {505, 515, 522, 532, 535, 542, 545, 552, 555, 565, 572, 575, 582, 592, 595, 600},
+        new int[] {2, 4, 5, 7, 8, 9},
+        new int[] {5, 6, 7, 8, 9, 10},
+        new int[] {12, 16, 22, 25, 26, 30},
+        new int[] {3, 4, 5, 6, 7, 8},
+        new int[] {81, 478, 599, 736, 932, 1241, 1647},
+        new int[] {1, 2, 3, 4, 5, 7, 9},
+        new int[] {1, 2, 4, 6, 8, 9},
+    };
 }
